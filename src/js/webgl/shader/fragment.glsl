@@ -9,5 +9,5 @@ uniform float uTime;
 uniform sampler2D uTexture;
 
 void main() {
-  gl_FragColor = vec4(sin(vIndex * uTime * 0.01), 0.2, 0.8, 1.0);
+  gl_FragColor = vec4(sin(vIndex * uTime * 0.01), 0.8, 0.8, 1.0);
 }
