@@ -2,6 +2,8 @@
 
 I used geometry instancing to move each instance along a trochoid curve, creating a unique visual representation.
 
+deploy:https://glsl-school01.vercel.app/
+
 
 ## starting with
 
