@@ -1,7 +1,6 @@
 # created in astro / using raw webgl api
 
-
-
+I used geometry instancing to move each instance along a trochoid curve, creating a unique visual representation.
 
 
 ## starting with
