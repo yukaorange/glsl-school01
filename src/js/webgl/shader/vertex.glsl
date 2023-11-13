@@ -16,6 +16,8 @@ uniform float uTime;
 uniform float polygonN;
 uniform float placeRadius;
 
+varying float vIndex;
+
 const float PI = 3.1415926535897932384626433832795;
 const float PI2 = PI * 2.0;
 
@@ -43,6 +45,9 @@ vec2 getTrochoidPos(float n, float t, float radius) {
 
 void main() {
   vec3 pos = position;
+
+  vIndex = instanceIndex;
+
   pos *= increaseValue;
 
   pos.xy += getPolygonPos(polygonN, uTime * 0.1, placeRadius);
