@@ -44,7 +44,7 @@ export class Sketch {
       this.setupResize()
       this.addObjects()
       this.addCamera()
-      this.addControls()
+      // this.addControls()
       this.addSettings()
       this.resize()
       this.resetTime()
