@@ -8,7 +8,7 @@ import fragmentShader from './shader/fragment.glsl'
 import vertexShader from './shader/vertex.glsl'
 
 export function init() {
-  const sketch = new Sketch({
+  new Sketch({
     dom: document.getElementById('webgl-canvas'),
   })
 }
@@ -26,7 +26,7 @@ export class Sketch {
     this.renderer = new THREE.WebGLRenderer()
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.renderer.setSize(this.width, this.height)
-    this.renderer.setClearColor(0x000000, 1)
+    this.renderer.setClearColor(0x808080, 1)
 
     this.container.appendChild(this.renderer.domElement)
 
@@ -47,6 +47,7 @@ export class Sketch {
       this.addControls()
       this.addSettings()
       this.resize()
+      this.resetTime()
       this.play()
       this.render()
     })
@@ -88,8 +89,21 @@ export class Sketch {
       this.pane.refresh()
     })
 
-    this.pane.addBinding(this, 'timeScale', { title: 'timeScale', min: 0.01, max: 10 })
+    this.pane.addBinding(this, 'timeScale', { label: 'speed', min: 0.01, max: 10 })
 
+    this.pane.addBinding(this.mesh.material.uniforms.polygonN, 'value', {
+      label: 'polygonN',
+      min: 1,
+      max: 12,
+      step: 1,
+    })
+
+    this.pane.addBinding(this.mesh.material.uniforms.placeRadius, 'value', {
+      label: 'placeRadius',
+      min: 0.1,
+      max: 0.99,
+      step: 0.001,
+    })
 
     window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'd') {
@@ -156,9 +170,10 @@ export class Sketch {
     // this.dist = this.height / 2 / Math.tan(fovRad)
     // this.camera = new THREE.PerspectiveCamera(fov, this.width / this.height, 0.001, 1000)
 
-    this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000)
+    this.camera = new THREE.PerspectiveCamera(60, this.width / this.height, 0.001, 1000)
 
-    this.camera.position.set(0, 0, 2)
+    this.camera.position.set(0, 0, 5)
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0))
   }
 
   /**controls
@@ -182,33 +197,51 @@ export class Sketch {
       },
       side: THREE.DoubleSide,
       uniforms: {
-        uTime: {
-          value: 0,
-        },
         uXaspect: {
           value: this.Xaspect / this.imageXAspect,
         },
         uYaspect: {
           value: this.Yaspect / this.imageYAspect,
         },
-        progress: {
-          value: 0,
-        },
         uTexture: {
           value: this.textures[0],
         },
-        mouse: {
-          value: new THREE.Vector2(0, 0),
+        uTime: {
+          value: 0,
         },
+        polygonN: { value: 3 },
+        placeRadius: { value: 0.2 },
       },
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
     })
+    
+    const plane = new THREE.PlaneGeometry(0.1, 0.1, 1, 1)
+    const baseGeometry = new THREE.EdgesGeometry(plane)
+    this.geometry = new THREE.InstancedBufferGeometry()
 
-    this.geometry = new THREE.PlaneGeometry(1, 1, 1, 1)
+    this.geometry.instanceCount = 4000
+    
+    this.geometry.index = baseGeometry.index
+    this.geometry.attributes = baseGeometry.attributes
 
-    this.plane = new THREE.Mesh(this.geometry, this.material)
-    this.scene.add(this.plane)
+    const indexArr = []
+    const increaseValueArr = []
+
+    for (let i = 0; i < this.geometry.instanceCount; i++) {
+      indexArr.push(i)
+      increaseValueArr.push(i)
+    }
+
+    this.geometry.setAttribute('instanceIndex', new THREE.InstancedBufferAttribute(new Float32Array(indexArr), 1))
+    this.geometry.setAttribute(
+      'increaseValue',
+      new THREE.InstancedBufferAttribute(new Float32Array(increaseValueArr), 1),
+    )
+
+    this.mesh = new THREE.LineSegments(this.geometry, this.material)
+
+    this.scene.add(this.mesh)
   }
   /**
    * Stop the rendering loop.
@@ -235,8 +268,6 @@ export class Sketch {
     const timeDelta = this.clock.getDelta() * this.timeScale
 
     this.time += timeDelta
-
-    this.plane.rotation.y = this.time / 2
 
     this.material.uniforms.uTime.value = this.time
 
